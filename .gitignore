@@ -1,0 +1,14 @@
+# Éviter de pousser les configurations de l'IDE (Android Studio / IntelliJ)
+.idea/
+
+# Si ta clé est dans un fichier de variables d'environnement (recommandé)
+.env
+.env.local
+
+# Si ta clé est dans un fichier de configuration spécifique (ex: config.json ou config.py)
+config.json
+secrets.py
+
+# Ignorer les dossiers de dépendances de tes applications meme-generator
+**/node_modules/
+**/__pycache__/
