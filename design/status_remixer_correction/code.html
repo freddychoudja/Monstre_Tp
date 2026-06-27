@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Status Remixer | Vibrant Meme Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&amp;family=Archivo+Narrow:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#081425",
+                        "on-background": "#d8e3fb",
+                        "secondary-container": "#3f465c",
+                        "surface-tint": "#ffb874",
+                        "on-primary": "#4b2800",
+                        "tertiary-fixed": "#e0e3e5",
+                        "tertiary-container": "#acafb1",
+                        "surface-container-lowest": "#040e1f",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-tertiary": "#2d3133",
+                        "outline-variant": "#554334",
+                        "inverse-on-surface": "#263143",
+                        "tertiary": "#c8cacc",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-primary-fixed": "#2d1600",
+                        "primary-fixed-dim": "#ffb874",
+                        "background": "#081425",
+                        "surface-container-highest": "#2a3548",
+                        "surface-container": "#152031",
+                        "on-secondary-container": "#adb4ce",
+                        "on-primary-fixed-variant": "#6a3b00",
+                        "inverse-surface": "#d8e3fb",
+                        "surface-dim": "#081425",
+                        "on-surface-variant": "#dbc2ad",
+                        "surface-bright": "#2f3a4c",
+                        "secondary-fixed": "#dae2fd",
+                        "surface-container-high": "#1f2a3c",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#643700",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-surface": "#d8e3fb",
+                        "surface-variant": "#2a3548",
+                        "surface-container-low": "#111c2d",
+                        "secondary": "#bec6e0",
+                        "on-tertiary-container": "#3f4344",
+                        "primary-fixed": "#ffdcbf",
+                        "primary": "#ffbd7f",
+                        "outline": "#a38d7a",
+                        "on-secondary": "#283044",
+                        "primary-container": "#ff9500",
+                        "inverse-primary": "#8c5000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "base": "4px",
+                        "margin-desktop": "40px",
+                        "gutter": "16px",
+                        "stack-md": "16px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Archivo Narrow"],
+                        "display-lg": ["Montserrat"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-caps": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "body-lg": ["Archivo Narrow"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .canvas-container {
+            aspect-ratio: 4 / 5;
+            background: radial-gradient(circle at center, #152031 0%, #081425 100%);
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #2a3548;
+            height: 4px;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            background-color: #ffbd7f;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+        }
+        body {
+            min-height: 100dvh;
+            background-color: #081425;
+            color: #d8e3fb;
+            font-family: 'Archivo Narrow', sans-serif;
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-margin-mobile py-stack-md bg-surface/80 backdrop-blur-md border-b border-surface-container-highest">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-2xl">public</span>
+<h1 class="font-display-lg-mobile text-lg tracking-tight text-on-surface uppercase">Vibrant Meme Engine</h1>
+</div>
+<div class="h-8 w-8 rounded-full bg-secondary-container flex items-center justify-center border border-outline">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col px-margin-mobile py-stack-md overflow-y-auto">
+<!-- Canvas Area -->
+<div class="relative canvas-container w-full rounded-xl border border-surface-container-highest overflow-hidden shadow-2xl flex flex-col items-center justify-center">
+<!-- Placeholder for Image -->
+<div class="absolute inset-0 bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-surface-container-highest">image</span>
+</div>
+<!-- Editable Text Overlay -->
+<div class="relative z-10 w-full px-6 text-center">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-white font-bold text-3xl uppercase text-center placeholder-on-surface-variant/30 resize-none overflow-hidden" placeholder="ENTER TEXT HERE" rows="2"></textarea>
+</div>
+<!-- Import Image Button (Overlay) -->
+<button class="absolute bottom-4 left-4 bg-surface-container-high/60 backdrop-blur-md hover:bg-surface-container-high px-4 py-2 rounded-full border border-outline-variant flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">add_photo_alternate</span>
+<span class="font-label-caps text-[10px]">Import Image</span>
+</button>
+<!-- AI Button (Overlay) -->
+<button class="absolute bottom-4 right-4 bg-primary px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-on-primary text-sm">auto_awesome</span>
+<span class="font-label-caps text-[10px] text-on-primary">Generate AI Punchline</span>
+</button>
+</div>
+<!-- Controls Section -->
+<div class="mt-stack-lg space-y-stack-lg">
+<!-- Font Size -->
+<div class="space-y-base">
+<div class="flex justify-between items-center px-1">
+<label class="font-label-caps text-on-surface-variant text-[11px]">Font Size</label>
+<span class="text-xs font-medium">32px</span>
+</div>
+<input class="w-full" max="72" min="12" type="range" value="32"/>
+</div>
+<!-- Alignment and Colors Row -->
+<div class="grid grid-cols-2 gap-stack-md">
+<!-- Position Buttons -->
+<div class="space-y-base">
+<label class="font-label-caps text-on-surface-variant text-[11px]">Position</label>
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-surface-container-highest">
+<button class="flex-1 py-1.5 rounded-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">align_vertical_top</span>
+</button>
+<button class="flex-1 py-1.5 rounded-md bg-secondary-container text-on-secondary-container">
+<span class="material-symbols-outlined text-lg">align_vertical_center</span>
+</button>
+<button class="flex-1 py-1.5 rounded-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">align_vertical_bottom</span>
+</button>
+</div>
+</div>
+<!-- Color Swatches -->
+<div class="space-y-base">
+<label class="font-label-caps text-on-surface-variant text-[11px]">Text Color</label>
+<div class="flex items-center gap-3 py-1">
+<button class="h-8 w-8 rounded-full bg-white border-2 border-primary ring-2 ring-offset-2 ring-offset-surface ring-transparent"></button>
+<button class="h-8 w-8 rounded-full bg-black border border-outline-variant"></button>
+<button class="h-8 w-8 rounded-full bg-yellow-400 border border-outline-variant"></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="mt-auto pt-stack-lg grid grid-cols-2 gap-gutter">
+<button class="py-3.5 rounded-xl border border-primary text-primary font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2 active:bg-primary/10">
+<span class="material-symbols-outlined">save</span>
+                Save
+            </button>
+<button class="py-3.5 rounded-xl bg-primary text-on-primary font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-lg active:opacity-90">
+<span class="material-symbols-outlined">share</span>
+                Share
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="safe-bottom sticky bottom-0 bg-surface-container-high border-t border-surface-container-highest px-6 pt-3 pb-2 flex justify-around">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant/60 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-caps text-[9px]">Reader</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant/60 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">settings_voice</span>
+<span class="font-label-caps text-[9px]">Voice</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">auto_fix_high</span>
+<span class="font-label-caps text-[9px]">Remix</span>
+</button>
+</nav>
+</body></html>

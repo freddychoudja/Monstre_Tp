@@ -1,201 +1,78 @@
-Voici une structure de fichier **README.md** professionnelle et complète. Elle récapitule ce qui a été fait et détaille les étapes techniques précises qu'il te reste à accomplir pour valider le projet dans les temps.
+# 🎭 Vibrant Meme Engine : Générateur de Memes Multimodal
+**Cours : ICT202 G2** | **Monstre Projet de Développement Mobile**
 
-Tu peux copier ce contenu dans un fichier nommé `README.md` à la racine de ton projet `Monstre_tp`.
-
----
-
-# 🎭 Monstre Projet : Générateur de Memes Multimodal
-**Cours : ICT202 G2** | **Durée : 1 Semaine**
-
-## 📝 Présentation
-Cette application mobile (React Native CLI) permet de capturer le contexte d'une discussion (texte, audio ou image) et d'utiliser l'IA pour générer du contenu humoristique prêt à être partagé.
+Cette application mobile native (**React Native CLI**) et son API Gateway (**Express.js**) permettent d'analyser le contexte d'une discussion ou d'un média (texte, audio, image) pour générer automatiquement des punchlines de memes humoristiques adaptées à la culture locale (Cameroun, Côte d'Ivoire, France, etc.) et de les éditer/partager.
 
 ---
 
-## 🛠 Stack Technique Actuelle
-*   **Frontend :** React Native CLI (Android).
-*   **Backend :** Node.js / Express.js.
-*   **IA :** Google Gemini API (Modèle 1.5-flash).
-*   **Communication :** Axios (Lien Mobile <-> Serveur via 10.0.2.2).
+## 🛠 Stack Technique
+
+*   **Frontend Mobile** : React Native CLI (Android natif)
+*   **Backend (API Gateway)** : Node.js / Express.js
+*   **IA de Texte & Vision (Multimodal)** : Groq API — Modèle **Llama 4 Scout** (`meta-llama/llama-4-scout-17b-16e-instruct`) avec fallback automatique vers Llama 3.3 et 3.1
+*   **Speech-to-Text (Transcription Audio)** : Groq API — Modèle **Whisper** (`whisper-large-v3-turbo`)
+*   **Intégration WhatsApp (Entrante)** : `react-native-share-menu` (Android Intents de Partage)
+*   **Partage Sortant** : `react-native-share`
+*   **Enregistrement Audio** : `react-native-audio-recorder-player`
+*   **Sélection d'Images** : `react-native-image-picker`
+*   **Capture de Rendu** : `react-native-view-shot`
 
 ---
 
-## ✅ État d'avancement (Roadmap)
+## 📱 Fonctionnalités Principales (Core)
 
-### Jour 1 : Setup & Fondations (TERMINÉ)
-*   [x] Initialisation du serveur Backend Express.
-*   [x] Configuration de l'environnement Android (SDK, NDK 26, Gradle).
-*   [x] Hello World React Native CLI sur Pixel 6 (AVD).
-*   [x] Test de connexion réussi entre le mobile et le backend.
-
-### Jour 2 : Intelligence Artificielle - "Context Reader" (EN COURS)
-*   [x] Intégration de l'API Gemini au Backend.
-*   [x] Création de la route `/analyze-context` pour l'analyse de texte.
-*   [x] UI Mobile : Champ de saisie et récupération de la suggestion de meme.
-*   [ ] **À faire :** Gérer les erreurs de parsing JSON de l'IA.
+1.  **Context Reader (Texte)** : L'utilisateur colle ou tape une discussion. L'IA (Llama 4 Scout) analyse la situation et l'émotion, et génère une punchline humoristique ainsi qu'une explication socioculturelle de la blague selon la région choisie.
+2.  **Voice-to-Meme (Audio)** : L'utilisateur enregistre une note vocale. Le backend transcrit l'audio via Whisper, puis Llama 4 Scout suggère un meme adapté au ton de l'audio.
+3.  **Status Remixer (Image & Éditeur)** : L'utilisateur charge une image depuis sa galerie. L'IA utilise la vision pour l'analyser et proposer un meme. L'utilisateur peut éditer la taille, la couleur et le positionnement du texte sur le canevas, sauvegarder l'image finale ou la partager directement.
+4.  **WhatsApp Share Intent (Partage WhatsApp)** : L'application est enregistrée dans le système Android pour recevoir directement du texte ou des images partagées depuis WhatsApp. Le fait de partager un message WhatsApp ouvre l'application avec le texte ou l'image pré-rempli.
 
 ---
 
-## 🚀 Étapes Suivantes (Jours 3 à 7)
+## ⚙️ Guide d'Installation et Lancement
 
-### Jour 3 : "Voice-to-Meme" (Audio) 🎤
-*   **Objectif :** Enregistrer une note vocale et la transformer en meme.
-*   **Tâches Backend :**
-    *   Installer `multer` pour recevoir des fichiers audio.
-    *   Intégrer une API de **Speech-to-Text** (OpenAI Whisper ou Google Speech).
-    *   Traduire l'audio en texte -> Analyser l'émotion -> Renvoyer une punchline.
-*   **Tâches Mobile :**
-    *   Installer `react-native-audio-recorder-player`.
-    *   Gérer les permissions du micro.
-    *   Envoyer le fichier `.mp3/.wav` au backend via FormData.
+### Préréglages
+Assurez-vous que l'**Android SDK** et **Java 17** sont correctement installés et configurés dans vos variables d'environnement (`ANDROID_HOME`).
 
-### Jour 4 : "Status Remixer" (Image) 🖼
-*   **Objectif :** Ajouter du texte sur une photo de la galerie.
-*   **Tâches Mobile :**
-    *   Installer `react-native-image-picker`.
-    *   Créer un éditeur visuel simple (Image de fond + Texte superposé).
-    *   Installer `react-native-view-shot` pour sauvegarder le meme final sous forme de nouvelle image.
-
-### Jour 5 : Fonctionnalités Avancées (Bonus) 🌟
-*   **Share Intent :** Permettre à l'app de recevoir une image partagée depuis WhatsApp (Bibliothèque : `react-native-share-menu`).
-*   **Génération d'Image par IA :** Ajouter un bouton pour créer une image de meme à partir de zéro via DALL-E ou Stable Diffusion.
-
-### Jour 6 : Design & UX (Refinement) 💅
-*   **Animations :** Ajouter des indicateurs de chargement (Lottie) pendant que l'IA réfléchit.
-*   **Navigation :** Mettre en place `react-navigation` (Tabs ou Stack) pour séparer les 3 fonctionnalités (Texte, Audio, Image).
-*   **Design :** Harmoniser les couleurs (Mode sombre/violet comme prévu).
-
-### Jour 7 : Livraison & Vidéo 🎥
-*   Nettoyage du code et commentaires.
-*   Enregistrement de la démo vidéo (3 à 5 minutes) montrant les 3 flux sur l'émulateur.
-*   Dernier Push sur le dépôt Git.
-
----
-
-## ⚙️ Installation Rapide (Dev Mode)
-
-1.  **Backend :**
+### 1. Lancement du Backend Express
+1.  Allez dans le dossier du serveur :
     ```bash
     cd meme-generator-backend
-    npm install
-    # Créer un .env avec GEMINI_API_KEY
-    node server.js
     ```
-2.  **Mobile :**
+2.  Installez les dépendances :
+    ```bash
+    npm install
+    ```
+3.  Configurez vos clés d'API. Créez un fichier nommé `.env` à la racine de `meme-generator-backend/` :
+    ```env
+    PORT=3000
+    GROQ_API_KEY=gsk_votre_cle_api_groq_officielle
+    ```
+4.  Lancez le serveur en mode développement :
+    ```bash
+    npm run dev
+    ```
+    Le serveur écoutera sur le port `3000`.
+
+### 2. Lancement du Frontend Mobile React Native
+1.  Allez dans le dossier mobile :
     ```bash
     cd Monstre
+    ```
+2.  Installez les modules Node :
+    ```bash
     npm install
-    npx react-native start
-    # Dans un autre terminal
+    ```
+3.  Démarrez le serveur de développement (Metro Bundler) :
+    ```bash
+    npm run start
+    ```
+4.  Dans un autre terminal, lancez le build de l'application sur votre émulateur ou appareil Android connecté :
+    ```bash
     npm run android
     ```
 
 ---
 
-### 💡 Notes pour la suite
-*   **IP Émulateur :** Toujours utiliser `http://10.0.2.2:3000` pour les appels API.
-*   **Fichiers :** Pour l'audio et l'image, bien utiliser `FormData` dans Axios pour envoyer les fichiers au serveur.
-
----
-
-**Veux-tu que je commence à préparer le code pour le Jour 3 (la gestion de l'audio et de Multer) ?**Voici une structure de fichier **README.md** professionnelle et complète. Elle récapitule ce qui a été fait et détaille les étapes techniques précises qu'il te reste à accomplir pour valider le projet dans les temps.
-
-Tu peux copier ce contenu dans un fichier nommé `README.md` à la racine de ton projet `Monstre_tp`.
-
----
-
-# 🎭 Monstre Projet : Générateur de Memes Multimodal
-**Cours : ICT202 G2** | **Durée : 1 Semaine**
-
-## 📝 Présentation
-Cette application mobile (React Native CLI) permet de capturer le contexte d'une discussion (texte, audio ou image) et d'utiliser l'IA pour générer du contenu humoristique prêt à être partagé.
-
----
-
-## 🛠 Stack Technique Actuelle
-*   **Frontend :** React Native CLI (Android).
-*   **Backend :** Node.js / Express.js.
-*   **IA :** Google Gemini API (Modèle 1.5-flash).
-*   **Communication :** Axios (Lien Mobile <-> Serveur via 10.0.2.2).
-
----
-
-## ✅ État d'avancement (Roadmap)
-
-### Jour 1 : Setup & Fondations (TERMINÉ)
-*   [x] Initialisation du serveur Backend Express.
-*   [x] Configuration de l'environnement Android (SDK, NDK 26, Gradle).
-*   [x] Hello World React Native CLI sur Pixel 6 (AVD).
-*   [x] Test de connexion réussi entre le mobile et le backend.
-
-### Jour 2 : Intelligence Artificielle - "Context Reader" (EN COURS)
-*   [x] Intégration de l'API Gemini au Backend.
-*   [x] Création de la route `/analyze-context` pour l'analyse de texte.
-*   [x] UI Mobile : Champ de saisie et récupération de la suggestion de meme.
-*   [ ] **À faire :** Gérer les erreurs de parsing JSON de l'IA.
-
----
-
-## 🚀 Étapes Suivantes (Jours 3 à 7)
-
-### Jour 3 : "Voice-to-Meme" (Audio) 🎤
-*   **Objectif :** Enregistrer une note vocale et la transformer en meme.
-*   **Tâches Backend :**
-    *   Installer `multer` pour recevoir des fichiers audio.
-    *   Intégrer une API de **Speech-to-Text** (OpenAI Whisper ou Google Speech).
-    *   Traduire l'audio en texte -> Analyser l'émotion -> Renvoyer une punchline.
-*   **Tâches Mobile :**
-    *   Installer `react-native-audio-recorder-player`.
-    *   Gérer les permissions du micro.
-    *   Envoyer le fichier `.mp3/.wav` au backend via FormData.
-
-### Jour 4 : "Status Remixer" (Image) 🖼
-*   **Objectif :** Ajouter du texte sur une photo de la galerie.
-*   **Tâches Mobile :**
-    *   Installer `react-native-image-picker`.
-    *   Créer un éditeur visuel simple (Image de fond + Texte superposé).
-    *   Installer `react-native-view-shot` pour sauvegarder le meme final sous forme de nouvelle image.
-
-### Jour 5 : Fonctionnalités Avancées (Bonus) 🌟
-*   **Share Intent :** Permettre à l'app de recevoir une image partagée depuis WhatsApp (Bibliothèque : `react-native-share-menu`).
-*   **Génération d'Image par IA :** Ajouter un bouton pour créer une image de meme à partir de zéro via DALL-E ou Stable Diffusion.
-
-### Jour 6 : Design & UX (Refinement) 💅
-*   **Animations :** Ajouter des indicateurs de chargement (Lottie) pendant que l'IA réfléchit.
-*   **Navigation :** Mettre en place `react-navigation` (Tabs ou Stack) pour séparer les 3 fonctionnalités (Texte, Audio, Image).
-*   **Design :** Harmoniser les couleurs (Mode sombre/violet comme prévu).
-
-### Jour 7 : Livraison & Vidéo 🎥
-*   Nettoyage du code et commentaires.
-*   Enregistrement de la démo vidéo (3 à 5 minutes) montrant les 3 flux sur l'émulateur.
-*   Dernier Push sur le dépôt Git.
-
----
-
-## ⚙️ Installation Rapide (Dev Mode)
-
-1.  **Backend :**
-    ```bash
-    cd meme-generator-backend
-    npm install
-    # Créer un .env avec GEMINI_API_KEY
-    node server.js
-    ```
-2.  **Mobile :**
-    ```bash
-    cd Monstre
-    npm install
-    npx react-native start
-    # Dans un autre terminal
-    npm run android
-    ```
-
----
-
-### 💡 Notes pour la suite
-*   **IP Émulateur :** Toujours utiliser `http://10.0.2.2:3000` pour les appels API.
-*   **Fichiers :** Pour l'audio et l'image, bien utiliser `FormData` dans Axios pour envoyer les fichiers au serveur.
-
----
-
-**Veux-tu que je commence à préparer le code pour le Jour 3 (la gestion de l'audio et de Multer) ?**
+## 💡 Notes de Développement
+*   **IP de l'émulateur** : L'application mobile contacte le backend hôte via l'adresse `http://10.0.2.2:3000` (adresse de rebouclage Android).
+*   **Permissions requises** : L'application demandera automatiquement les permissions `Enregistrement Audio (Microphone)` et `Accès Galerie (Photos)` lors de l'ouverture des onglets correspondants.

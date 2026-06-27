@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vibrant Meme Engine - Context Reader</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&amp;family=Archivo+Narrow:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#690005",
+                    "on-secondary": "#283044",
+                    "on-tertiary-container": "#3f4344",
+                    "outline": "#a38d7a",
+                    "on-background": "#d8e3fb",
+                    "error": "#ffb4ab",
+                    "on-tertiary": "#2d3133",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "outline-variant": "#554334",
+                    "surface-container": "#152031",
+                    "surface-container-high": "#1f2a3c",
+                    "surface": "#081425",
+                    "background": "#081425",
+                    "tertiary-fixed": "#e0e3e5",
+                    "secondary-container": "#3f465c",
+                    "primary-fixed-dim": "#ffb874",
+                    "surface-variant": "#2a3548",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "on-secondary-fixed": "#131b2e",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "primary-container": "#ff9500",
+                    "inverse-surface": "#d8e3fb",
+                    "on-primary-container": "#643700",
+                    "on-secondary-container": "#adb4ce",
+                    "surface-dim": "#081425",
+                    "surface-tint": "#ffb874",
+                    "on-primary-fixed": "#2d1600",
+                    "inverse-on-surface": "#263143",
+                    "secondary": "#bec6e0",
+                    "tertiary-container": "#acafb1",
+                    "surface-container-low": "#111c2d",
+                    "primary-fixed": "#ffdcbf",
+                    "surface-container-lowest": "#040e1f",
+                    "surface-bright": "#2f3a4c",
+                    "on-primary": "#4b2800",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "on-surface": "#d8e3fb",
+                    "inverse-primary": "#8c5000",
+                    "on-surface-variant": "#dbc2ad",
+                    "secondary-fixed": "#dae2fd",
+                    "primary": "#ffbd7f",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-highest": "#2a3548",
+                    "on-tertiary-fixed": "#191c1e",
+                    "on-primary-fixed-variant": "#6a3b00",
+                    "tertiary": "#c8cacc"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "margin-desktop": "40px",
+                    "stack-lg": "32px",
+                    "margin-mobile": "20px",
+                    "base": "4px",
+                    "stack-md": "16px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Archivo Narrow"],
+                    "label-caps": ["Montserrat"],
+                    "display-lg": ["Montserrat"],
+                    "body-lg": ["Archivo Narrow"],
+                    "headline-md": ["Montserrat"],
+                    "display-lg-mobile": ["Montserrat"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800"}],
+                    "display-lg": ["48px", {"lineHeight": "52px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "display-lg-mobile": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "900"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #081425;
+            color: #d8e3fb;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid #334155;
+        }
+        .text-area-focus:focus {
+            border-color: #ff9500;
+            box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.2);
+            outline: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-background/60 dark:bg-background/60 backdrop-blur-xl border-b border-outline-variant/30 docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-margin-mobile py-stack-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/30 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a young African-American creative professional in a stylish dark turtleneck. The lighting is dramatic, using a high-contrast rim light technique that separates the subject from the deep midnight blue background. The overall aesthetic is polished, modern, and editorial, perfectly matching the premium meme app's dark theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKyil6X0dQ9g7d0O9B6FSY_m2Os5DUgq6uYxv_vcX43sFm2-gZbPEwMfEeVDpgzAfai4PsnQ7D5JslXGApc5-4zgGpC12miBEsRqBSfCkNPv1JlbS9Bh3e8UvvKo37pwP2w_z-vI2qX9Gc0nfzWzJEHz3b3THz2cMYQvTFJX6sI-2j0yqpJ_MhyGjynPNLLcoiKin5ZMJPuLLcIRs3zyj3wZAFsyV1kVkVseDUb2U-PPe-hnEWkbUdXzKsFdp8qkTlCOI99qAPN5dp"/>
+</div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile font-black text-primary dark:text-primary tracking-tighter">Vibrant Meme Engine</h1>
+</div>
+<button class="text-primary dark:text-primary hover:opacity-80 transition-opacity active:translate-y-0.5 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+</button>
+</header>
+<main class="max-w-4xl mx-auto px-margin-mobile pt-stack-lg">
+<!-- Input Section -->
+<section class="flex flex-col gap-stack-md" id="input-canvas">
+<div class="flex flex-col gap-2">
+<span class="font-label-caps text-label-caps text-secondary">SOURCE DE CONTEXTE</span>
+<textarea class="w-full h-48 bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 font-body-md text-body-md text-on-surface text-area-focus transition-all resize-none" placeholder="Collez ou tapez une discussion ici..."></textarea>
+</div>
+<!-- Culture Selector -->
+<div class="flex flex-col gap-3">
+<span class="font-label-caps text-label-caps text-secondary uppercase">RÉGION &amp; CULTURE</span>
+<div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-caps text-label-caps whitespace-nowrap active:scale-95 transition-transform">CAMEROUN</button>
+<button class="bg-surface-container-high text-secondary px-6 py-2 rounded-full font-label-caps text-label-caps border border-outline-variant/30 whitespace-nowrap hover:bg-surface-variant transition-colors">CÔTE D'IVOIRE</button>
+<button class="bg-surface-container-high text-secondary px-6 py-2 rounded-full font-label-caps text-label-caps border border-outline-variant/30 whitespace-nowrap hover:bg-surface-variant transition-colors">FRANCE</button>
+<button class="bg-surface-container-high text-secondary px-6 py-2 rounded-full font-label-caps text-label-caps border border-outline-variant/30 whitespace-nowrap hover:bg-surface-variant transition-colors">SÉNÉGAL</button>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container font-label-caps text-label-caps py-5 rounded-xl font-extrabold shadow-lg hover:opacity-90 active:translate-y-1 transition-all" onclick="generateMeme()">
+                GÉNÉRER LE MEME
+            </button>
+</section>
+<!-- Loading State (Hidden) -->
+<section class="hidden py-20 flex flex-col items-center justify-center gap-6" id="loading-state">
+<div class="relative w-24 h-24">
+<div class="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+<div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+</div>
+<p class="font-headline-md text-headline-md text-primary animate-pulse">ANALYSE DU CONTEXTE...</p>
+</section>
+<!-- Result Section (Asymmetric Layout) -->
+<section class="hidden flex flex-col gap-stack-lg mt-stack-lg" id="result-canvas">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Meme Card -->
+<div class="md:col-span-8 glass-panel rounded-xl overflow-hidden shadow-2xl relative">
+<div class="absolute top-4 left-4 bg-primary px-3 py-1 rounded font-label-caps text-label-caps text-on-primary">PUNCHLINE</div>
+<div class="p-stack-lg flex flex-col gap-4 min-h-[320px] justify-center items-center text-center">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background italic leading-tight">
+                            "TU VOIS LES GARS QUI DISENT 'ON EST ENSEMBLE' MAIS QUI DISPARAISSENT QUAND LA NOTE ARRIVE?"
+                        </h2>
+</div>
+<div class="p-4 bg-surface-container-highest/40 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-primary">#CamerounHumor</span>
+<div class="flex gap-2">
+<button class="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="share">share</span></button>
+<button class="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="favorite">favorite</span></button>
+</div>
+</div>
+</div>
+<!-- Cultural Context Block -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<div class="bg-surface-container-high border border-outline-variant/30 p-6 rounded-xl h-full flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-on-surface">ANALYSE CULTURELLE</span>
+</div>
+<p class="font-body-md text-body-md text-secondary leading-relaxed">
+                            Cette punchline s'appuie sur l'ironie sociale de l'expression camerounaise "On est ensemble", souvent utilisée pour exprimer une solidarité de façade qui s'évapore face aux responsabilités financières. Un classique du 'Nkap' (argent).
+                        </p>
+<div class="mt-auto pt-4 border-t border-outline-variant/30">
+<span class="font-label-caps text-label-caps text-secondary text-[10px]">CONFIANCE IA: 98%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Cluster -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<button class="bg-surface-container-high border-2 border-outline-variant/30 text-white font-label-caps text-label-caps py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-variant transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="content_copy">content_copy</span>
+                    COPIER LE TEXTE
+                </button>
+<button class="bg-surface-container-high border-2 border-outline-variant/30 text-white font-label-caps text-label-caps py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-variant transition-colors active:scale-95" onclick="resetApp()">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+                    RÉGÉNÉRER
+                </button>
+<button class="bg-primary-container text-on-primary-container font-label-caps text-label-caps py-4 rounded-lg flex items-center justify-center gap-2 font-extrabold shadow-lg hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="palette">palette</span>
+                    CRÉER L'IMAGE
+                </button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-background/60 dark:bg-background/60 backdrop-blur-xl fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-safe px-4 border-t border-outline-variant/30 shadow-sm z-50">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary font-extrabold hover:text-primary transition-colors active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-caps text-label-caps">Reader</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary opacity-60 hover:text-primary transition-colors active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="mic_none">mic_none</span>
+<span class="font-label-caps text-label-caps">Voice</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary opacity-60 hover:text-primary transition-colors active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+<span class="font-label-caps text-label-caps">Remix</span>
+</a>
+</nav>
+<script>
+        function generateMeme() {
+            const inputCanvas = document.getElementById('input-canvas');
+            const loadingState = document.getElementById('loading-state');
+            const resultCanvas = document.getElementById('result-canvas');
+
+            inputCanvas.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                resultCanvas.classList.remove('hidden');
+            }, 1800);
+        }
+
+        function resetApp() {
+             const inputCanvas = document.getElementById('input-canvas');
+            const resultCanvas = document.getElementById('result-canvas');
+            
+            resultCanvas.classList.add('hidden');
+            inputCanvas.classList.remove('hidden');
+        }
+    </script>
+</body></html>

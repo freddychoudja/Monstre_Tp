@@ -1,0 +1,73 @@
+export const Theme = {
+  colors: {
+    background: '#081425',
+    surface: '#081425',
+    surfaceDim: '#081425',
+    surfaceBright: '#2f3a4c',
+    surfaceContainerLowest: '#040e1f',
+    surfaceContainerLow: '#111c2d',
+    surfaceContainer: '#152031',
+    surfaceContainerHigh: '#1f2a3c',
+    surfaceContainerHighest: '#2a3548',
+    onSurface: '#d8e3fb',
+    onSurfaceVariant: '#dbc2ad',
+    inverseSurface: '#d8e3fb',
+    inverseOnSurface: '#263143',
+    outline: '#a38d7a',
+    outlineVariant: '#334155',
+    surfaceTint: '#ffb874',
+    primary: '#ffbd7f',
+    onPrimary: '#4b2800',
+    primaryContainer: '#ff9500',
+    onPrimaryContainer: '#643700',
+    inversePrimary: '#8c5000',
+    secondary: '#bec6e0',
+    onSecondary: '#283044',
+    secondaryContainer: '#3f465c',
+    onSecondaryContainer: '#adb4ce',
+    tertiary: '#c8cacc',
+    onTertiary: '#2d3133',
+    tertiaryContainer: '#acafb1',
+    onTertiaryContainer: '#3f4344',
+    error: '#ffb4ab',
+    onError: '#690005',
+    errorContainer: '#93000a',
+    onErrorContainer: '#ffdad6',
+  },
+  roundness: {
+    sm: 4,
+    default: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    full: 9999,
+  },
+  spacing: {
+    base: 4,
+    gutter: 16,
+    marginMobile: 20,
+    stackSm: 8,
+    stackMd: 16,
+    stackLg: 32,
+  },
+  fonts: {
+    // Fallback aux polices système avec le bon poids/style pour Android
+    display: {
+      fontFamily: 'sans-serif-condensed',
+      fontWeight: '900' as const,
+    },
+    heading: {
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold' as const,
+    },
+    body: {
+      fontFamily: 'sans-serif-light',
+      fontWeight: 'normal' as const,
+    },
+    label: {
+      fontFamily: 'sans-serif',
+      fontWeight: '800' as const,
+      letterSpacing: 1.2,
+    }
+  }
+};

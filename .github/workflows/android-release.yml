@@ -1,0 +1,47 @@
+name: Build Android Release APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: Monstre/package-json.lock # Facultatif, géré par défaut si absent
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd Monstre
+          npm install
+
+      - name: Build Android Release APK
+        run: |
+          cd Monstre/android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: Monstre/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
