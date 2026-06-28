@@ -4,7 +4,7 @@ buildscript {
         minSdkVersion = 24
         compileSdkVersion = 36
         targetSdkVersion = 36
-        ndkVersion = "27.1.12297006"
+        ndkVersion = "26.3.11579264"
         kotlinVersion = "2.1.20"
     }
     repositories {
@@ -35,6 +35,16 @@ subprojects { project ->
     } else {
         project.afterEvaluate {
             configureAndroid()
+        }
+    }
+
+    // Force consistent Kotlin stdlib version across all subprojects
+    project.configurations.configureEach { config ->
+        config.resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin'
+                && details.requested.name.startsWith('kotlin-stdlib')) {
+                details.useVersion rootProject.ext.kotlinVersion
+            }
         }
     }
 
