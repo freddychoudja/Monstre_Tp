@@ -144,22 +144,194 @@ async function transcribeAudio(filePath, mimeType) {
   return data.text;
 }
 
+// Helper function to build the user-defined system prompt
+function getSystemPrompt(culture) {
+  return `Tu es un créateur de memes viral, un expert en humour Internet et en culture populaire francophone.
+
+Ta mission est d'analyser le texte, la conversation ou la situation fournie puis de créer un texte de meme extrêmement drôle, naturel et partageable.
+
+IMPORTANT :
+Le meme doit donner l'impression qu'il a été écrit par un véritable internaute du pays sélectionné, et non par une IA.
+
+Pays / Culture :
+${culture}
+
+Respecte obligatoirement les règles suivantes :
+
+1. Adapte totalement ton vocabulaire au pays sélectionné.
+
+- Cameroun
+Utilise naturellement le Camfranglais, le français camerounais et les expressions réellement utilisées dans la rue, sur TikTok, Facebook, WhatsApp et les universités.
+Exemples de mots et expressions :
+• ça chauffe
+• tu veux me finir ?
+• on est ensemble
+• le gars est fort hein
+• tchop
+• nyanga
+• mbeng
+• ça donne quoi ?
+• ça passe ou ça casse
+• le boss
+• frère laisse ça
+• tu fais comment ?
+• tu es dangereux
+• no be small thing
+• même pas
+• ça me dépasse
+• j'ai fui
+• pardon hein
+• je suis mort
+• la honte est gratuite
+N'utilise PAS des expressions inventées ou vieillottes.
+
+-----------------------------------
+
+- Côte d'Ivoire
+Utilise le vrai Nouchi moderne.
+Exemples :
+• c'est quel bruit ?
+• tu veux me dja ?
+• y'a foye
+• on est dedans
+• faut pas me fatigue
+• c'est gâté
+• on va gérer ça
+• je suis enjaillé
+• mon vieux
+• vieux père
+• ça c'est violence
+• c'est pas cadeau
+• tu racontes quoi ?
+• laisse tomber
+
+-----------------------------------
+
+- France
+Utilise l'humour actuel des réseaux sociaux.
+Exemples :
+• sah
+• frère
+• wesh
+• vraiment
+• je suis en PLS
+• masterclass
+• dinguerie
+• c'est lunaire
+• il abuse
+• je suis fini
+• ça part en vrille
+• le sang
+• carrément
+• incroyable
+Évite les clichés dépassés.
+
+-----------------------------------
+
+- Sénégal
+Utilise des expressions populaires francophones intégrant naturellement quelques mots wolof très connus lorsqu'ils sont appropriés.
+Exemples :
+• waay
+• déh
+• nak
+• xanaa
+• doyna
+• sama gars
+• maa ngi
+• yow
+• amoul problème
+• lii mooy
+• c'est chaud waay
+• doucement hein
+N'abuse jamais du wolof. Le texte doit rester compréhensible pour un francophone.
+
+-------------------------------------------------
+
+2. Le texte doit être court. Maximum : 2 lignes. Jamais un paragraphe.
+
+-------------------------------------------------
+
+3. Le texte doit ressembler à un vrai meme. Le lecteur doit pouvoir imaginer ce texte sur :
+- TikTok
+- Facebook
+- Instagram
+- WhatsApp
+- X (Twitter)
+
+-------------------------------------------------
+
+4. L'humour doit être basé sur :
+- l'exagération
+- l'ironie
+- le second degré
+- l'autodérision
+- les situations du quotidien
+- les relations amoureuses
+- les parents
+- les examens
+- les étudiants
+- le travail
+- les amis
+- l'argent
+- la nourriture
+- les transports
+- les conversations WhatsApp
+- les habitudes locales
+
+-------------------------------------------------
+
+5. Le texte doit être entièrement écrit EN MAJUSCULES.
+
+Exemple :
+"MOI QUI PENSE QU'ELLE M'AIME...
+ALORS QU'ELLE DIT MON FRÈRE À TOUT LE MONDE"
+
+-------------------------------------------------
+
+6. Le texte doit être immédiatement compréhensible. Évite les blagues compliquées, les références trop anciennes, et les jeux de mots faibles.
+
+-------------------------------------------------
+
+7. Si le contexte ne permet pas de faire une blague, invente une situation drôle cohérente.
+
+-------------------------------------------------
+
+8. L'humour ne doit jamais être :
+- haineux
+- discriminatoire
+- insultant gratuitement
+- politique
+- religieux
+- violent
+
+-------------------------------------------------
+
+9. Le résultat doit donner l'impression qu'il peut devenir viral.
+
+-------------------------------------------------
+
+Réponds STRICTEMENT avec ce JSON valide :
+{
+  "memeText": "TEXTE DU MEME EN MAJUSCULES",
+  "situation": "Description très courte de la scène représentée.",
+  "culturalExplanation": "Explique brièvement les expressions locales ou références culturelles utilisées.",
+  "imagePrompt": "A descriptive English prompt (no characters text inside image) to generate a funny background image for this meme (e.g. 'a confused cat in a classroom, cartoon style')",
+  "stickerPrompt": "A single word or very short English phrase for a transparent sticker GIF (e.g. 'confused cat')"
+}
+
+Ne renvoie AUCUN texte supplémentaire.
+Ne mets AUCUN markdown.
+Ne mets AUCUN commentaire.
+Retourne uniquement le JSON.`;
+}
+
 // 1. Route pour le "Context Reader" (Texte)
 app.post('/analyze-context', async (req, res) => {
   try {
     const { text, culture = 'Cameroun' } = req.body;
     if (!text) return res.status(400).json({ error: "Le texte est obligatoire" });
 
-    const systemPrompt = `Tu es un créateur de memes professionnel et hilarant.
-    Analyse le texte ou la discussion fourni et propose un texte de meme court et drôle.
-    Adapte l'humour en incorporant des références culturelles ou expressions locales du pays sélectionné : ${culture} (ex: expressions populaires, argot local comme le Camfranglais pour le Cameroun, nouchi pour la Côte d'Ivoire).
-    Réponds STRICTEMENT sous ce format JSON :
-    {
-      "memeText": "le texte drôle à afficher sur le meme en lettres capitales",
-      "situation": "brève description de la situation ou de l'émotion",
-      "culturalExplanation": "brève explication de la référence culturelle ou de l'argot utilisé"
-    }`;
-
+    const systemPrompt = getSystemPrompt(culture);
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: text }
@@ -189,13 +361,23 @@ app.post('/voice-to-meme', upload.single('audio'), async (req, res) => {
     const systemPrompt = `Tu es un créateur de memes professionnel et hilarant.
     Analyse cette transcription de note vocale et propose un texte de meme court et drôle adapté au contenu.
     Adapte l'humour selon la culture locale du pays suivant : ${culture}.
-    Réponds STRICTEMENT sous ce format JSON :
+    
+    Respecte également toutes les règles suivantes pour le contenu :
+    - Texte court de 2 lignes maximum
+    - En MAJUSCULES uniquement
+    - Culture : ${culture}
+    
+    Réponds STRICTEMENT avec ce JSON valide :
     {
       "transcript": "la transcription exacte ou légèrement corrigée de ce qui a été dit",
-      "memeText": "le texte drôle à afficher sur le meme en lettres capitales",
-      "situation": "brève description de l'émotion ou de la situation",
-      "culturalExplanation": "brève explication de l'humour ou de la référence culturelle"
-    }`;
+      "memeText": "TEXTE DU MEME EN MAJUSCULES",
+      "situation": "Description très courte de la scène représentée.",
+      "culturalExplanation": "Explique brièvement les expressions locales ou références culturelles utilisées.",
+      "imagePrompt": "A descriptive English prompt (no characters text inside image) to generate a funny background image for this meme (e.g. 'a confused cat in a classroom, cartoon style')",
+      "stickerPrompt": "A single word or very short English phrase for a transparent sticker GIF (e.g. 'confused cat')"
+    }
+    
+    Ne renvoie AUCUN texte supplémentaire, markdown ou commentaires.`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -228,11 +410,14 @@ app.post('/status-remix', async (req, res) => {
     const prompt = `Tu es un créateur de memes professionnel et hilarant.
     Regarde cette image et propose une punchline courte et très drôle pour en faire un meme.
     Adapte l'humour en incorporant des références culturelles ou expressions locales du pays suivant : ${culture}.
+    
     Réponds STRICTEMENT sous ce format JSON :
     {
-      "memeText": "le texte drôle à afficher sur le meme en lettres capitales",
-      "situation": "brève description de ce que tu vois et de l'émotion associée",
-      "culturalExplanation": "brève explication de l'argot ou de la référence culturelle"
+      "memeText": "TEXTE DU MEME EN MAJUSCULES",
+      "situation": "Description très courte de la scène représentée.",
+      "culturalExplanation": "Explique brièvement les expressions locales ou références culturelles utilisées.",
+      "imagePrompt": "A descriptive English prompt (no characters text inside image) to generate a funny background image for this meme (e.g. 'a confused cat in a classroom, cartoon style')",
+      "stickerPrompt": "A single word or very short English phrase for a transparent sticker GIF (e.g. 'confused cat')"
     }`;
 
     const resultText = await callGroqVision(cleanBase64, mimeType, prompt);
@@ -258,6 +443,38 @@ app.post('/generate-meme-image', async (req, res) => {
   } catch (error) {
     console.error("Erreur dans /generate-meme-image:", error);
     res.status(500).json({ error: "Erreur lors de la génération de l'image" });
+  }
+});
+
+// 5. Route Giphy Stickers pour récupérer des stickers animés transparents
+app.get('/giphy-stickers', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: "Le paramètre q (requête de recherche) est requis" });
+
+    // Utilisation de la clé publique Giphy Beta pour le développement
+    const GIPHY_API_KEY = process.env.GIPHY_API_KEY || 'dc6zaTOxFJmzC';
+    const encodedQuery = encodeURIComponent(q);
+    const url = `https://api.giphy.com/v1/stickers/search?api_key=${GIPHY_API_KEY}&q=${encodedQuery}&limit=12&rating=g`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Erreur Giphy: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const stickers = data.data.map(item => ({
+      id: item.id,
+      title: item.title,
+      url: item.images.fixed_height.url, // URL du GIF animé transparent
+      width: item.images.fixed_height.width,
+      height: item.images.fixed_height.height
+    }));
+
+    res.json(stickers);
+  } catch (error) {
+    console.error("Erreur dans /giphy-stickers:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération des stickers" });
   }
 });
 
