@@ -28,6 +28,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Monstre/package-lock.json
 
+      - name: Install NDK and CMake via SDK Manager
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;27.1.12297006" \
+            "cmake;3.22.1" || true
+
       - name: Install Dependencies
         run: |
           cd Monstre
