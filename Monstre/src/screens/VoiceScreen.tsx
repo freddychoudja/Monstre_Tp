@@ -40,7 +40,7 @@ export const VoiceScreen: React.FC<VoiceScreenProps> = ({ onSendToRemix }) => {
   // Waveform bars simulation heights
   const [waveHeights, setWaveHeights] = useState<number[]>([10, 20, 40, 15, 30, 10, 20, 40, 15, 30]);
 
-  const audioRecorderPlayer = AudioRecorderPlayer;
+  const audioRecorderPlayer = useRef(new AudioRecorderPlayer()).current;
   const waveIntervalRef = useRef<any | null>(null);
 
   useEffect(() => {
