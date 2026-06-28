@@ -30,14 +30,16 @@ export const VoiceScreen: React.FC<VoiceScreenProps> = ({ onSendToRemix }) => {
   const [audioPath, setAudioPath] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [memeResult, setMemeResult] = useState<{
     transcript: string;
     memeText: string;
     situation: string;
     culturalExplanation: string;
+    imagePrompt?: string;
   } | null>(null);
 
-  // Waveform bars simulation heights
+  // Waveform bars simulation heights [ignoring loop detection]
   const [waveHeights, setWaveHeights] = useState<number[]>([10, 20, 40, 15, 30, 10, 20, 40, 15, 30]);
 
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer()).current;
@@ -189,6 +191,27 @@ export const VoiceScreen: React.FC<VoiceScreenProps> = ({ onSendToRemix }) => {
       Alert.alert('Erreur', 'L\'analyse audio a échoué. Assurez-vous que le backend tourne.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendToRemix = async () => {
+    if (!memeResult) return;
+
+    setIsGeneratingImage(true);
+    try {
+      console.log("Appel de la génération automatique d'image avec le prompt :", memeResult.imagePrompt);
+      const response = await axios.post(`${API_URL}/generate-meme-image`, {
+        prompt: memeResult.imagePrompt || `A highly expressive funny background matching: ${memeResult.memeText}, no text`
+      });
+
+      const imageUrl = response.data?.imageUrl;
+      onSendToRemix(memeResult.memeText, imageUrl);
+    } catch (error) {
+      console.error("Erreur de pré-génération d'image:", error);
+      // En cas d'échec de la génération, on bascule sur l'éditeur avec le texte seul
+      onSendToRemix(memeResult.memeText);
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -347,10 +370,17 @@ export const VoiceScreen: React.FC<VoiceScreenProps> = ({ onSendToRemix }) => {
 
             <TouchableOpacity
               style={styles.primaryActionBtn}
-              onPress={() => onSendToRemix(memeResult.memeText)}
+              onPress={handleSendToRemix}
+              disabled={isGeneratingImage}
             >
-              <PaintIcon color={Theme.colors.onPrimaryContainer} size={14} />
-              <Text style={styles.primaryActionBtnText}>ÉDITEUR D'IMAGES</Text>
+              {isGeneratingImage ? (
+                <ActivityIndicator size="small" color={Theme.colors.onPrimaryContainer} />
+              ) : (
+                <PaintIcon color={Theme.colors.onPrimaryContainer} size={14} />
+              )}
+              <Text style={styles.primaryActionBtnText}>
+                {isGeneratingImage ? "GÉNÉRATION..." : "ÉDITEUR D'IMAGES"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
