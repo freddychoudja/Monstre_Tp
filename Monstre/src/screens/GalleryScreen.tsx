@@ -8,15 +8,27 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Share from 'react-native-share';
 import { Theme } from '../styles/theme';
-import { ShareIcon, DeleteIcon, PaintIcon, RefreshIcon, SparklesIcon } from '../components/Icons';
+import {
+  ShareIcon,
+  DeleteIcon,
+  PaintIcon,
+  RefreshIcon,
+  SparklesIcon,
+  GlobeIcon,
+  CloseIcon
+} from '../components/Icons';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2;
+
+// Load contributors JSON
+const CONTRIBUTORS = require('../data/contributors.json');
 
 interface GalleryItem {
   id: string;
@@ -34,6 +46,7 @@ interface GalleryScreenProps {
 export const GalleryScreen: React.FC<GalleryScreenProps> = ({ onSendToRemix, activeTab }) => {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreditsVisible, setIsCreditsVisible] = useState(false);
 
   const loadHistory = async () => {
     setIsLoading(true);
@@ -85,7 +98,7 @@ export const GalleryScreen: React.FC<GalleryScreenProps> = ({ onSendToRemix, act
     try {
       await Share.open({
         url: item.imageUri,
-        type: item.type === 'sticker' ? 'image/webp' : 'image/jpeg',
+        type: item.type === 'sticker' ? 'image/webp' : 'image/gif',
         title: 'Meme Partagé',
         message: 'Généré avec Vibrant Meme Engine !',
       });
@@ -132,9 +145,14 @@ export const GalleryScreen: React.FC<GalleryScreenProps> = ({ onSendToRemix, act
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>MES CRÉATIONS</Text>
-        <TouchableOpacity style={styles.refreshBtn} onPress={loadHistory} activeOpacity={0.7}>
-          <RefreshIcon color={Theme.colors.primary} size={14} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setIsCreditsVisible(true)} activeOpacity={0.7}>
+            <GlobeIcon color={Theme.colors.primary} size={14} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerBtn} onPress={loadHistory} activeOpacity={0.7}>
+            <RefreshIcon color={Theme.colors.primary} size={14} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isLoading ? (
@@ -160,6 +178,56 @@ export const GalleryScreen: React.FC<GalleryScreenProps> = ({ onSendToRemix, act
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Contributors Credits Modal */}
+      <Modal
+        visible={isCreditsVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsCreditsVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>CONTRIBUTEURS DU PROJET</Text>
+              <TouchableOpacity onPress={() => setIsCreditsVisible(false)} style={styles.modalCloseBtn}>
+                <CloseIcon color="#FFFFFF" size={16} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Voici la liste des étudiants et développeurs ayant collaboré sur Vibrant Meme Engine :
+            </Text>
+
+            <FlatList
+              data={CONTRIBUTORS}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={styles.contributorsList}
+              renderItem={({ item }) => (
+                <View style={styles.contributorCard}>
+                  <View style={styles.contributorAvatar}>
+                    <Text style={styles.avatarText}>
+                      {item.name ? item.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                    </Text>
+                  </View>
+                  <View style={styles.contributorInfo}>
+                    <Text style={styles.contributorName}>{item.name}</Text>
+                    <Text style={styles.contributorRole}>{item.role || 'Contributeur'}</Text>
+                    {item.github && (
+                      <Text style={styles.contributorGithub}>@{item.github}</Text>
+                    )}
+                  </View>
+                </View>
+              )}
+              ListEmptyComponent={
+                <View style={styles.emptyContributors}>
+                  <Text style={styles.emptyContributorsText}>Aucun contributeur répertorié pour l'instant.</Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -184,7 +252,7 @@ const styles = StyleSheet.create({
     color: Theme.colors.onSurface,
     letterSpacing: 1.5,
   },
-  refreshBtn: {
+  headerBtn: {
     padding: 8,
     backgroundColor: Theme.colors.surfaceContainerHigh,
     borderRadius: Theme.roundness.full,
@@ -194,7 +262,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 100, // Espace navigation
+    paddingBottom: 100,
   },
   card: {
     width: COLUMN_WIDTH,
@@ -270,5 +338,104 @@ const styles = StyleSheet.create({
     color: Theme.colors.secondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Theme.colors.surfaceContainerLowest,
+    borderTopLeftRadius: Theme.roundness.xl,
+    borderTopRightRadius: Theme.roundness.xl,
+    minHeight: 480,
+    maxHeight: '80%',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontWeight: '900',
+    fontSize: 16,
+    color: Theme.colors.primary,
+    letterSpacing: 1,
+  },
+  modalCloseBtn: {
+    padding: 8,
+    backgroundColor: Theme.colors.surfaceContainerHigh,
+    borderRadius: Theme.roundness.full,
+  },
+  modalSubtitle: {
+    fontFamily: Theme.fonts.body.fontFamily,
+    fontSize: 13,
+    color: Theme.colors.secondary,
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  contributorsList: {
+    paddingBottom: 20,
+  },
+  contributorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.outlineVariant,
+    borderRadius: Theme.roundness.lg,
+    padding: 12,
+    marginBottom: 10,
+    gap: 12,
+  },
+  contributorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Theme.colors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.primary,
+  },
+  avatarText: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  contributorInfo: {
+    flex: 1,
+  },
+  contributorName: {
+    fontFamily: Theme.fonts.body.fontFamily,
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  contributorRole: {
+    fontFamily: Theme.fonts.body.fontFamily,
+    fontSize: 11,
+    color: Theme.colors.secondary,
+    marginTop: 2,
+  },
+  contributorGithub: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontSize: 11,
+    color: Theme.colors.primary,
+    marginTop: 2,
+  },
+  emptyContributors: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyContributorsText: {
+    fontFamily: Theme.fonts.body.fontFamily,
+    color: Theme.colors.secondary,
   },
 });
