@@ -439,6 +439,12 @@ app.post('/generate-meme-image', async (req, res) => {
     // Utilisation du modèle de génération Flux (par défaut sur Pollinations)
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=1000&nologo=true`;
 
+    console.log("Pré-génération de l'image sur Pollinations.ai...");
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Erreur Pollinations: ${response.status}`);
+    }
+
     res.json({ imageUrl });
   } catch (error) {
     console.error("Erreur dans /generate-meme-image:", error);

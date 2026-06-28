@@ -114,9 +114,10 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
         setSelectedImage(response.data.imageUrl);
         base64Ref.current = null; // Generated from URL, not local upload
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Alert.alert('Erreur', 'La génération d\'image IA a échoué.');
+      const msg = error.response?.data?.error || error.message || 'Erreur inconnue';
+      Alert.alert('Erreur', `La génération d'image IA a échoué: ${msg}`);
     } finally {
       setIsGeneratingImage(false);
     }
