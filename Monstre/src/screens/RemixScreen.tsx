@@ -10,15 +10,31 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  Platform
+  Platform,
+  Modal,
+  FlatList
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import ViewShot from 'react-native-view-shot';
 import Share from 'react-native-share';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Theme } from '../styles/theme';
 import { API_URL } from '../config';
-import { ImageIcon, FolderIcon, SparklesIcon, SaveIcon, ShareIcon, AlignTopIcon, AlignCenterIcon, AlignBottomIcon } from '../components/Icons';
+import {
+  ImageIcon,
+  FolderIcon,
+  SparklesIcon,
+  SaveIcon,
+  ShareIcon,
+  AlignTopIcon,
+  AlignCenterIcon,
+  AlignBottomIcon,
+  GifIcon,
+  CloseIcon
+} from '../components/Icons';
+
+const { width } = Dimensions.get('window');
 
 interface RemixScreenProps {
   initialText?: string;
@@ -35,12 +51,18 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [selectedRegion, setSelectedRegion] = useState('CAMEROUN');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+  // Sticker GIF State
+  const [isStickerModalVisible, setIsStickerModalVisible] = useState(false);
+  const [stickersList, setStickersList] = useState<any[]>([]);
+  const [isLoadingStickers, setIsLoadingStickers] = useState(false);
+  const [stickerSearchQuery, setStickerSearchQuery] = useState('');
 
   const base64Ref = useRef<string | null>(null);
   const mimeTypeRef = useRef<string>('image/jpeg');
   const viewShotRef = useRef<any>(null);
 
-  // Écouter les changements de props initialText et initialImageUri
   useEffect(() => {
     if (initialText) {
       setMemeText(initialText.toUpperCase());
@@ -50,8 +72,6 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
   useEffect(() => {
     if (initialImageUri) {
       setSelectedImage(initialImageUri);
-      // Si c'est une URI locale partagée, nous pourrons la lire.
-      // Note: pour le share intent, on peut aussi l'analyser.
     }
   }, [initialImageUri]);
 
@@ -73,33 +93,81 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie de photos.');
+      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie.');
+    }
+  };
+
+  const handleGenerateAIImage = async () => {
+    if (!memeText.trim()) {
+      Alert.alert('Texte vide', 'Veuillez saisir du texte pour inspirer la génération d\'image.');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      // Call backend to generate image via Pollinations.ai
+      const response = await axios.post(`${API_URL}/generate-meme-image`, {
+        prompt: `A highly expressive background photo or illustration matching: ${memeText}, cinematic lighting, 8k, funny meme style, no text`
+      });
+
+      if (response.data && response.data.imageUrl) {
+        setSelectedImage(response.data.imageUrl);
+        base64Ref.current = null; // Generated from URL, not local upload
+      }
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.error || error.message || 'Erreur inconnue';
+      Alert.alert('Erreur', `La génération d'image IA a échoué: ${msg}`);
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
   const handleAIPunchline = async () => {
-    if (!selectedImage || !base64Ref.current) {
-      Alert.alert('Image manquante', 'Veuillez d\'abord importer une image de votre galerie.');
+    if (!selectedImage) {
+      Alert.alert('Image manquante', 'Veuillez d\'abord importer ou générer une image.');
       return;
     }
 
     setIsLoading(true);
-
     try {
-      console.log("Appel de la vision IA...");
-      const response = await axios.post(`${API_URL}/status-remix`, {
-        image: base64Ref.current,
-        mimeType: mimeTypeRef.current,
-        culture: selectedRegion
-      });
+      let payload: any = { culture: selectedRegion };
 
+      if (base64Ref.current) {
+        payload.image = base64Ref.current;
+        payload.mimeType = mimeTypeRef.current;
+      } else {
+        // Fallback or URL handling if image was AI generated (we can download and convert or just analyze prompt)
+        Alert.alert('Analyse', 'L\'analyse d\'image fonctionne mieux avec des photos de votre galerie.');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await axios.post(`${API_URL}/status-remix`, payload);
       setMemeText(response.data.memeText.toUpperCase());
-      Alert.alert('Génération réussie', `Texte suggéré avec humour (${selectedRegion}) : \n"${response.data.memeText}"`);
     } catch (error) {
       console.error(error);
-      Alert.alert('Erreur', 'L\'IA n\'a pas pu analyser cette image. Vérifiez que le backend fonctionne.');
+      Alert.alert('Erreur', 'L\'IA n\'a pas pu analyser cette image.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveToHistory = async (capturedUri: string, type: 'meme' | 'sticker' = 'meme', text: string = memeText) => {
+    try {
+      const stored = await AsyncStorage.getItem('MONSTRE_MEME_HISTORY');
+      const history = stored ? JSON.parse(stored) : [];
+      const newItem = {
+        id: Date.now().toString(),
+        imageUri: capturedUri,
+        memeText: text,
+        date: new Date().toLocaleDateString('fr-FR'),
+        type: type
+      };
+      history.push(newItem);
+      await AsyncStorage.setItem('MONSTRE_MEME_HISTORY', JSON.stringify(history));
+    } catch (error) {
+      console.error('Error saving to history:', error);
     }
   };
 
@@ -107,11 +175,12 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
     try {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
-        Alert.alert('Sauvegardé !', `Meme sauvegardé dans le cache temporaire :\n${uri}\n\nVous pouvez le partager sur WhatsApp pour l'enregistrer.`);
+        await saveToHistory(uri, 'meme');
+        Alert.alert('Sauvegardé !', 'Meme ajouté à votre historique et galerie locale.');
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Erreur', 'Impossible d\'exporter l\'image du meme.');
+      Alert.alert('Erreur', 'Impossible de sauvegarder le meme.');
     }
   };
 
@@ -119,11 +188,12 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
     try {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
+        await saveToHistory(uri, 'meme');
         await Share.open({
           url: uri,
           type: 'image/jpeg',
           title: 'Mon Meme',
-          message: 'Généré avec Vibrant Meme Engine !',
+          message: 'Partagé depuis Vibrant Meme Engine !',
         });
       }
     } catch (error) {
@@ -131,7 +201,46 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
     }
   };
 
-  // Ajustement de la disposition verticale du texte
+  // Sticker GIF functions
+  const openStickerModal = () => {
+    setIsStickerModalVisible(true);
+    // Use first 3 words of memeText as query seed
+    const seed = memeText.split(' ').slice(0, 3).join(' ') || 'meme';
+    setStickerSearchQuery(seed);
+    searchStickers(seed);
+  };
+
+  const searchStickers = async (query: string) => {
+    if (!query.trim()) return;
+    setIsLoadingStickers(true);
+    try {
+      const response = await axios.get(`${API_URL}/giphy-stickers?q=${encodeURIComponent(query)}`);
+      setStickersList(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingStickers(false);
+    }
+  };
+
+  const handleSelectSticker = async (sticker: any) => {
+    setIsStickerModalVisible(false);
+    try {
+      // Save to history automatically
+      await saveToHistory(sticker.url, 'sticker', sticker.title || 'Sticker GIF');
+      
+      // Share sticker GIF
+      await Share.open({
+        url: sticker.url,
+        type: 'image/gif',
+        title: 'Sticker GIF',
+        message: 'Regarde ce sticker !',
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const getJustifyContent = () => {
     if (position === 'TOP') return 'flex-start';
     if (position === 'BOTTOM') return 'flex-end';
@@ -140,7 +249,7 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Region selector for AI punchline */}
+      {/* Region Selector */}
       <View style={styles.regionSection}>
         <Text style={styles.labelCaps}>ADAPTER L'HUMOUR IA</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.regionsScroll}>
@@ -163,62 +272,74 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
         </ScrollView>
       </View>
 
-      {/* Canvas ViewShot */}
-      <ViewShot ref={viewShotRef} options={{ format: 'jpg', quality: 0.9 }}>
-        <View style={styles.canvas}>
-          {/* Background Image / Placeholder */}
-          {selectedImage ? (
-            <Image source={{ uri: selectedImage }} style={StyleSheet.absoluteFill} />
-          ) : (
-            <View style={styles.canvasPlaceholder}>
-              <ImageIcon color={Theme.colors.primary} size={48} />
-              <Text style={styles.placeholderText}>Sélectionnez une image</Text>
+      {/* Canvas ViewShot (NO buttons inside it so they don't render on the output meme) */}
+      <View style={styles.canvasContainer}>
+        <ViewShot ref={viewShotRef} options={{ format: 'jpg', quality: 0.9 }}>
+          <View style={styles.canvas}>
+            {selectedImage ? (
+              <Image source={{ uri: selectedImage }} style={StyleSheet.absoluteFill} />
+            ) : (
+              <View style={styles.canvasPlaceholder}>
+                <ImageIcon color={Theme.colors.primary} size={48} />
+                <Text style={styles.placeholderText}>Sélectionnez ou générez une image</Text>
+              </View>
+            )}
+
+            <View style={[styles.textOverlayContainer, { justifyContent: getJustifyContent() }]}>
+              <TextInput
+                style={[
+                  styles.overlayText,
+                  {
+                    fontSize: fontSize,
+                    color: textColor,
+                    textShadowColor: '#000000',
+                    textShadowOffset: { width: 2, height: 2 },
+                    textShadowRadius: 6,
+                  }
+                ]}
+                multiline
+                value={memeText}
+                onChangeText={setMemeText}
+                placeholder="SAISISSEZ VOTRE TEXTE"
+                placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                textAlign="center"
+              />
             </View>
-          )}
-
-          {/* Editable Text Overlay */}
-          <View style={[styles.textOverlayContainer, { justifyContent: getJustifyContent() }]}>
-            <TextInput
-              style={[
-                styles.overlayText,
-                {
-                  fontSize: fontSize,
-                  color: textColor,
-                  // Text Stroke effect for legibility on white backgrounds
-                  textShadowColor: '#000000',
-                  textShadowOffset: { width: 2, height: 2 },
-                  textShadowRadius: 6,
-                }
-              ]}
-              multiline
-              value={memeText}
-              onChangeText={setMemeText}
-              placeholder="SAISISSEZ VOTRE TEXTE"
-              placeholderTextColor="rgba(255, 255, 255, 0.4)"
-              textAlign="center"
-            />
           </View>
+        </ViewShot>
 
-          {/* Canvas Buttons Overlay */}
-          <TouchableOpacity style={[styles.canvasBtnLeft, { flexDirection: 'row', alignItems: 'center', gap: 6 }]} onPress={handlePickImage} activeOpacity={0.7}>
+        {/* Buttons overlay positioned absolutely OUTSIDE the ViewShot capture container */}
+        <View style={styles.canvasActionsOverlay}>
+          <TouchableOpacity style={styles.canvasFloatBtn} onPress={handlePickImage} activeOpacity={0.7}>
             <FolderIcon color="#FFFFFF" size={12} />
-            <Text style={styles.canvasBtnText}>Galerie</Text>
+            <Text style={styles.canvasFloatBtnText}>Galerie</Text>
           </TouchableOpacity>
 
-          {selectedImage && (
-            <TouchableOpacity style={[styles.canvasBtnRight, { flexDirection: 'row', alignItems: 'center', gap: 6 }]} onPress={handleAIPunchline} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.canvasFloatBtn} onPress={handleGenerateAIImage} activeOpacity={0.7}>
+            {isGeneratingImage ? (
+              <ActivityIndicator size="small" color={Theme.colors.primary} />
+            ) : (
+              <>
+                <SparklesIcon color={Theme.colors.primary} size={12} />
+                <Text style={styles.canvasFloatBtnText}>Générer IA</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {selectedImage && base64Ref.current && (
+            <TouchableOpacity style={[styles.canvasFloatBtn, styles.accentFloatBtn]} onPress={handleAIPunchline} activeOpacity={0.7}>
               {isLoading ? (
                 <ActivityIndicator size="small" color={Theme.colors.onPrimary} />
               ) : (
                 <>
                   <SparklesIcon color={Theme.colors.onPrimary} size={12} />
-                  <Text style={styles.canvasBtnTextRight}>IA Punchline</Text>
+                  <Text style={styles.canvasFloatBtnTextAccent}>IA Punchline</Text>
                 </>
               )}
             </TouchableOpacity>
           )}
         </View>
-      </ViewShot>
+      </View>
 
       {/* Text Size Control */}
       <View style={styles.controlRow}>
@@ -295,6 +416,12 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
         </View>
       </View>
 
+      {/* Stickers GIF Trigger */}
+      <TouchableOpacity style={styles.stickerTriggerBtn} onPress={openStickerModal} activeOpacity={0.8}>
+        <GifIcon color={Theme.colors.primary} size={16} />
+        <Text style={styles.stickerTriggerBtnText}>TROUVER DES STICKERS ANIMÉS (GIF)</Text>
+      </TouchableOpacity>
+
       {/* Save and Share Buttons */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.secondaryButton} onPress={handleSave}>
@@ -307,6 +434,66 @@ export const RemixScreen: React.FC<RemixScreenProps> = ({ initialText = '', init
           <Text style={styles.primaryBtnText}>PARTAGER</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Sticker Giphy Search Modal */}
+      <Modal
+        visible={isStickerModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsStickerModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>STICKERS ANIMÉS (GIF)</Text>
+              <TouchableOpacity onPress={() => setIsStickerModalVisible(false)} style={styles.modalCloseBtn}>
+                <CloseIcon color="#FFFFFF" size={16} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalSearchRow}>
+              <TextInput
+                style={styles.modalSearchInput}
+                value={stickerSearchQuery}
+                onChangeText={setStickerSearchQuery}
+                placeholder="Rechercher des stickers..."
+                placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                onSubmitEditing={() => searchStickers(stickerSearchQuery)}
+              />
+              <TouchableOpacity style={styles.modalSearchBtn} onPress={() => searchStickers(stickerSearchQuery)}>
+                <Text style={styles.modalSearchBtnText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isLoadingStickers ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color={Theme.colors.primary} />
+              </View>
+            ) : (
+              <FlatList
+                data={stickersList}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                contentContainerStyle={styles.stickersGrid}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.stickerCard}
+                    onPress={() => handleSelectSticker(item)}
+                    activeOpacity={0.8}
+                  >
+                    <Image source={{ uri: item.url }} style={styles.stickerImage} resizeMode="contain" />
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.stickersEmpty}>
+                    <Text style={styles.stickersEmptyText}>Aucun sticker trouvé. Essayez une autre recherche.</Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -319,7 +506,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Theme.spacing.marginMobile,
     paddingTop: Theme.spacing.stackLg,
-    paddingBottom: 80,
+    paddingBottom: 100,
     gap: Theme.spacing.stackLg,
   },
   regionSection: {
@@ -357,19 +544,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 1.1,
   },
-  canvas: {
+  canvasContainer: {
     width: '100%',
     aspectRatio: 4 / 5,
+    borderRadius: Theme.roundness.xl,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  canvas: {
+    width: '100%',
+    height: '100%',
     backgroundColor: Theme.colors.surfaceContainerLow,
     borderRadius: Theme.roundness.xl,
     borderWidth: 1,
     borderColor: Theme.colors.outlineVariant,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    elevation: 8,
   },
   canvasPlaceholder: {
     ...StyleSheet.absoluteFill,
@@ -377,13 +566,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 16,
   },
-  placeholderIcon: {
-    fontSize: 64,
-    opacity: 0.4,
-  },
   placeholderText: {
     fontFamily: Theme.fonts.body.fontFamily,
-    fontSize: 16,
+    fontSize: 14,
     color: Theme.colors.secondary,
     opacity: 0.6,
   },
@@ -399,38 +584,42 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  canvasBtnLeft: {
+  canvasActionsOverlay: {
     position: 'absolute',
-    bottom: 16,
-    left: 16,
-    backgroundColor: 'rgba(21, 32, 49, 0.6)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    bottom: 12,
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: 8,
+    zIndex: 30,
+  },
+  canvasFloatBtn: {
+    backgroundColor: 'rgba(21, 32, 49, 0.8)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: Theme.roundness.full,
     borderWidth: 1,
     borderColor: Theme.colors.outlineVariant,
-    zIndex: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  canvasBtnRight: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
+  accentFloatBtn: {
     backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: Theme.roundness.full,
-    zIndex: 20,
+    borderColor: Theme.colors.primary,
+    marginLeft: 'auto',
   },
-  canvasBtnText: {
+  canvasFloatBtnText: {
     fontFamily: Theme.fonts.label.fontFamily,
     fontWeight: '800',
-    fontSize: 10,
+    fontSize: 9,
     color: '#FFFFFF',
   },
-  canvasBtnTextRight: {
+  canvasFloatBtnTextAccent: {
     fontFamily: Theme.fonts.label.fontFamily,
     fontWeight: '800',
-    fontSize: 10,
+    fontSize: 9,
     color: Theme.colors.onPrimary,
   },
   controlRow: {
@@ -504,12 +693,6 @@ const styles = StyleSheet.create({
   posBtnSelected: {
     backgroundColor: Theme.colors.secondaryContainer,
   },
-  posBtnText: {
-    fontSize: 16,
-  },
-  posBtnTextSelected: {
-    color: '#FFFFFF',
-  },
   colorSelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -526,6 +709,26 @@ const styles = StyleSheet.create({
   colorSwatchSelected: {
     borderWidth: 2,
     borderColor: Theme.colors.primary,
+  },
+  stickerTriggerBtn: {
+    width: '100%',
+    backgroundColor: Theme.colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary,
+    paddingVertical: 14,
+    borderRadius: Theme.roundness.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  stickerTriggerBtnText: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontWeight: '800',
+    fontSize: 11,
+    color: Theme.colors.primary,
+    letterSpacing: 1,
   },
   actionRow: {
     flexDirection: 'row',
@@ -572,7 +775,98 @@ const styles = StyleSheet.create({
     color: Theme.colors.onPrimary,
     letterSpacing: 1,
   },
-  btnIcon: {
-    fontSize: 14,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Theme.colors.surfaceContainerLowest,
+    borderTopLeftRadius: Theme.roundness.xl,
+    borderTopRightRadius: Theme.roundness.xl,
+    minHeight: 480,
+    maxHeight: '85%',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontWeight: '900',
+    fontSize: 16,
+    color: Theme.colors.primary,
+    letterSpacing: 1,
+  },
+  modalCloseBtn: {
+    padding: 8,
+    backgroundColor: Theme.colors.surfaceContainerHigh,
+    borderRadius: Theme.roundness.full,
+  },
+  modalSearchRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  modalSearchInput: {
+    flex: 1,
+    backgroundColor: Theme.colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.outlineVariant,
+    borderRadius: Theme.roundness.default,
+    paddingHorizontal: 16,
+    color: '#FFFFFF',
+    height: 48,
+  },
+  modalSearchBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.roundness.default,
+    height: 48,
+  },
+  modalSearchBtnText: {
+    fontFamily: Theme.fonts.label.fontFamily,
+    fontWeight: '800',
+    color: Theme.colors.onPrimary,
+  },
+  modalLoading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stickersGrid: {
+    paddingBottom: 20,
+  },
+  stickerCard: {
+    flex: 1,
+    aspectRatio: 1,
+    margin: 6,
+    backgroundColor: Theme.colors.surfaceContainerHigh,
+    borderRadius: Theme.roundness.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.3)',
+  },
+  stickerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  stickersEmpty: {
+    paddingVertical: 80,
+    alignItems: 'center',
+  },
+  stickersEmptyText: {
+    fontFamily: Theme.fonts.body.fontFamily,
+    color: Theme.colors.secondary,
+    textAlign: 'center',
   },
 });
