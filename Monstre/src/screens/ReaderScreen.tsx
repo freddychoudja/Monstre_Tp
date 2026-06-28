@@ -17,7 +17,7 @@ import { SparklesIcon, CopyIcon, RefreshIcon, PaintIcon } from '../components/Ic
 
 interface ReaderScreenProps {
   initialText?: string;
-  onSendToRemix: (text: string) => void;
+  onSendToRemix: (text: string, imageUri?: string) => void;
 }
 
 const REGIONS = ['CAMEROUN', "CÔTE D'IVOIRE", 'FRANCE', 'SÉNÉGAL'];
@@ -26,10 +26,12 @@ export const ReaderScreen: React.FC<ReaderScreenProps> = ({ initialText = '', on
   const [inputText, setInputText] = useState(initialText);
   const [selectedRegion, setSelectedRegion] = useState('CAMEROUN');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [memeResult, setMemeResult] = useState<{
     memeText: string;
     situation: string;
     culturalExplanation: string;
+    imagePrompt?: string;
   } | null>(null);
 
   const [isFocused, setIsFocused] = useState(false);
@@ -61,6 +63,27 @@ export const ReaderScreen: React.FC<ReaderScreenProps> = ({ initialText = '', on
       Alert.alert('Erreur', "Impossible de contacter le serveur d'IA.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendToRemix = async () => {
+    if (!memeResult) return;
+
+    setIsGeneratingImage(true);
+    try {
+      console.log("Appel de la génération automatique d'image avec le prompt :", memeResult.imagePrompt);
+      const response = await axios.post(`${API_URL}/generate-meme-image`, {
+        prompt: memeResult.imagePrompt || `A highly expressive funny background matching: ${memeResult.memeText}, no text`
+      });
+
+      const imageUrl = response.data?.imageUrl;
+      onSendToRemix(memeResult.memeText, imageUrl);
+    } catch (error) {
+      console.error("Erreur de pré-génération d'image:", error);
+      // En cas d'échec de la génération, on bascule sur l'éditeur avec le texte seul
+      onSendToRemix(memeResult.memeText);
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -184,11 +207,18 @@ export const ReaderScreen: React.FC<ReaderScreenProps> = ({ initialText = '', on
 
             <TouchableOpacity
               style={styles.primaryContainerButton}
-              onPress={() => onSendToRemix(memeResult.memeText)}
+              onPress={handleSendToRemix}
               activeOpacity={0.7}
+              disabled={isGeneratingImage}
             >
-              <PaintIcon color={Theme.colors.onPrimaryContainer} size={16} />
-              <Text style={styles.primaryContainerBtnText}>CRÉER L'IMAGE</Text>
+              {isGeneratingImage ? (
+                <ActivityIndicator size="small" color={Theme.colors.onPrimaryContainer} />
+              ) : (
+                <PaintIcon color={Theme.colors.onPrimaryContainer} size={16} />
+              )}
+              <Text style={styles.primaryContainerBtnText}>
+                {isGeneratingImage ? "GÉNÉRATION..." : "CRÉER L'IMAGE"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -447,4 +477,4 @@ const styles = StyleSheet.create({
     color: Theme.colors.onPrimaryContainer,
     letterSpacing: 1.2,
   },
-});
+});git branch
