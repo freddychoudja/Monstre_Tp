@@ -37,4 +37,11 @@ subprojects { project ->
             configureAndroid()
         }
     }
+
+    // Force Kotlin compilation tasks to target JVM 17 to match Java 17
+    project.tasks.configureEach { task ->
+        if (task.class.name.startsWith("org.jetbrains.kotlin.gradle.tasks.KotlinCompile")) {
+            task.kotlinOptions.jvmTarget = "17"
+        }
+    }
 }
