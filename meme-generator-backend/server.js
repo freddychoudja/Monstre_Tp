@@ -144,8 +144,44 @@ async function transcribeAudio(filePath, mimeType) {
   return data.text;
 }
 
-// Helper function to build the user-defined system prompt
+// Helper function to load all cultures dynamically [ignoring loop detection]
+function getCulturesData() {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir);
+  }
+  const files = fs.readdirSync(dataDir);
+  const cultures = {};
+
+  files.forEach(file => {
+    if (file.endsWith('.js')) {
+      try {
+        // Clear require cache to allow dynamic reloading in dev
+        const filePath = path.join(dataDir, file);
+        delete require.cache[require.resolve(filePath)];
+        const cultureData = require(filePath);
+        if (cultureData.name) {
+          cultures[cultureData.name.toUpperCase()] = cultureData;
+        }
+      } catch (err) {
+        console.error(`Erreur de chargement du fichier culture ${file}:`, err);
+      }
+    }
+  });
+  return cultures;
+}
+
+// Helper function to build the user-defined system prompt [ignoring loop detection]
 function getSystemPrompt(culture) {
+  const cultures = getCulturesData();
+  let cultureRules = "";
+
+  Object.keys(cultures).forEach(key => {
+    const c = cultures[key];
+    const exprList = c.expressions ? c.expressions.map(e => `• ${e}`).join('\n') : "";
+    cultureRules += `\n- ${c.name}\n${c.instructions || ""}\nExemples d'expressions :\n${exprList}\n-----------------------------------\n`;
+  });
+
   return `Tu es un créateur de memes viral, un expert en humour Internet et en culture populaire francophone.
 
 Ta mission est d'analyser le texte, la conversation ou la situation fournie puis de créer un texte de meme extrêmement drôle, naturel et partageable.
@@ -153,162 +189,20 @@ Ta mission est d'analyser le texte, la conversation ou la situation fournie puis
 IMPORTANT :
 Le meme doit donner l'impression qu'il a été écrit par un véritable internaute du pays sélectionné, et non par une IA.
 
-Pays / Culture :
-${culture}
+Pays / Culture sélectionné(e) : ${culture}
+
+Voici les règles spécifiques par région disponibles :
+${cultureRules}
 
 Respecte obligatoirement les règles suivantes :
-
-1. Adapte totalement ton vocabulaire au pays sélectionné.
-
-- Cameroun
-Utilise naturellement le Camfranglais, le français camerounais et les expressions réellement utilisées dans la rue, sur TikTok, Facebook, WhatsApp et les universités.
-Exemples de mots et expressions :
-• ça chauffe
-• tu veux me finir ?
-• on est ensemble
-• le gars est fort hein
-• tchop
-• nyanga
-• mbeng
-• ça donne quoi ?
-• ça passe ou ça casse
-• le boss
-• frère laisse ça
-• tu fais comment ?
-• tu es dangereux
-• no be small thing
-• même pas
-• ça me dépasse
-• j'ai fui
-• pardon hein
-• je suis mort
-• la honte est gratuite
-N'utilise PAS des expressions inventées ou vieillottes.
-
------------------------------------
-
-- Côte d'Ivoire
-Utilise le vrai Nouchi moderne.
-Exemples :
-• c'est quel bruit ?
-• tu veux me dja ?
-• y'a foye
-• on est dedans
-• faut pas me fatigue
-• c'est gâté
-• on va gérer ça
-• je suis enjaillé
-• mon vieux
-• vieux père
-• ça c'est violence
-• c'est pas cadeau
-• tu racontes quoi ?
-• laisse tomber
-
------------------------------------
-
-- France
-Utilise l'humour actuel des réseaux sociaux.
-Exemples :
-• sah
-• frère
-• wesh
-• vraiment
-• je suis en PLS
-• masterclass
-• dinguerie
-• c'est lunaire
-• il abuse
-• je suis fini
-• ça part en vrille
-• le sang
-• carrément
-• incroyable
-Évite les clichés dépassés.
-
------------------------------------
-
-- Sénégal
-Utilise des expressions populaires francophones intégrant naturellement quelques mots wolof très connus lorsqu'ils sont appropriés.
-Exemples :
-• waay
-• déh
-• nak
-• xanaa
-• doyna
-• sama gars
-• maa ngi
-• yow
-• amoul problème
-• lii mooy
-• c'est chaud waay
-• doucement hein
-N'abuse jamais du wolof. Le texte doit rester compréhensible pour un francophone.
-
--------------------------------------------------
-
+1. Adapte totalement ton vocabulaire au pays sélectionné en te basant sur les règles ci-dessus.
 2. Le texte doit être court. Maximum : 2 lignes. Jamais un paragraphe.
-
--------------------------------------------------
-
-3. Le texte doit ressembler à un vrai meme. Le lecteur doit pouvoir imaginer ce texte sur :
-- TikTok
-- Facebook
-- Instagram
-- WhatsApp
-- X (Twitter)
-
--------------------------------------------------
-
-4. L'humour doit être basé sur :
-- l'exagération
-- l'ironie
-- le second degré
-- l'autodérision
-- les situations du quotidien
-- les relations amoureuses
-- les parents
-- les examens
-- les étudiants
-- le travail
-- les amis
-- l'argent
-- la nourriture
-- les transports
-- les conversations WhatsApp
-- les habitudes locales
-
--------------------------------------------------
-
+3. Le texte doit ressembler à un vrai meme partageable sur les réseaux sociaux.
+4. L'humour doit être basé sur l'exagération, l'ironie, le second degré ou l'autodérision.
 5. Le texte doit être entièrement écrit EN MAJUSCULES.
-
-Exemple :
-"MOI QUI PENSE QU'ELLE M'AIME...
-ALORS QU'ELLE DIT MON FRÈRE À TOUT LE MONDE"
-
--------------------------------------------------
-
-6. Le texte doit être immédiatement compréhensible. Évite les blagues compliquées, les références trop anciennes, et les jeux de mots faibles.
-
--------------------------------------------------
-
+6. Le texte doit être immédiatement compréhensible.
 7. Si le contexte ne permet pas de faire une blague, invente une situation drôle cohérente.
-
--------------------------------------------------
-
-8. L'humour ne doit jamais être :
-- haineux
-- discriminatoire
-- insultant gratuitement
-- politique
-- religieux
-- violent
-
--------------------------------------------------
-
-9. Le résultat doit donner l'impression qu'il peut devenir viral.
-
--------------------------------------------------
+8. L'humour ne doit jamais être haineux, discriminatoire, insultant, politique ou violent.
 
 Réponds STRICTEMENT avec ce JSON valide :
 {
