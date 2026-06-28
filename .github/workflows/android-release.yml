@@ -28,6 +28,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Monstre/package-lock.json
 
+      - name: Install CMake via Android SDK Manager
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "cmake;3.22.1" || true
+
       - name: Install Frontend Dependencies
         run: |
           cd Monstre
@@ -37,7 +41,8 @@ jobs:
         run: |
           cd Monstre/android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon \
+            -PreactNativeArchitectures=arm64-v8a
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
