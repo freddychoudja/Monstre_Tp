@@ -130,7 +130,7 @@ export const SaveIcon: React.FC<IconProps> = ({ color, size = 16 }) => (
 export const ShareIcon: React.FC<IconProps> = ({ color, size = 16 }) => (
   <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
     <View style={{ width: size * 0.45, height: size * 0.45, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: color, borderTopLeftRadius: 1, borderTopRightRadius: 1 }} />
-    <View style={{ width: 1.5, height: size * 0.4, backgroundColor: color, position: 'absolute', top: 1 }} />
+    <View style={{ 1.5, height: size * 0.4, backgroundColor: color, position: 'absolute', top: 1 }} />
     <View style={{
       width: 0,
       height: 0,
@@ -200,6 +200,32 @@ export const AlignBottomIcon: React.FC<IconProps> = ({ color, size = 16 }) => (
     <View style={{ width: size * 0.9, height: 2, backgroundColor: color, opacity: 0.5, borderRadius: 1, alignSelf: 'center' }} />
     <View style={{ width: size * 0.6, height: 2, backgroundColor: color, opacity: 0.5, borderRadius: 1, alignSelf: 'center' }} />
     <View style={{ width: size, height: 3, backgroundColor: color, borderRadius: 1.5 }} />
+  </View>
+);
+
+export const HistoryIcon: React.FC<IconProps> = ({ color, size = 20 }) => (
+  <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size * 0.8, height: size * 0.8, borderRadius: (size * 0.8) / 2, borderWidth: 2, borderColor: color, borderLeftColor: 'transparent', transform: [{ rotate: '-45deg' }] }} />
+    <View style={{ width: 1.5, height: size * 0.3, backgroundColor: color, position: 'absolute', top: size * 0.25 }} />
+    <View style={{ width: size * 0.25, height: 1.5, backgroundColor: color, position: 'absolute', top: size * 0.5, left: size * 0.5 }} />
+    <View style={{ width: 0, height: 0, borderLeftWidth: 3, borderLeftColor: 'transparent', borderRightWidth: 3, borderRightColor: 'transparent', borderBottomWidth: 4, borderBottomColor: color, position: 'absolute', top: 1, left: 1, transform: [{ rotate: '-45deg' }] }} />
+  </View>
+);
+
+export const GifIcon: React.FC<IconProps> = ({ color, size = 20 }) => (
+  <View style={{ width: size, height: size, borderWidth: 2, borderColor: color, borderRadius: 4, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+      <View style={{ width: size * 0.2, height: size * 0.4, borderLeftWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: color }} />
+      <View style={{ width: 1.5, height: size * 0.4, backgroundColor: color }} />
+      <View style={{ width: size * 0.2, height: size * 0.4, borderLeftWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: color, transform: [{ rotate: '180deg' }] }} />
+    </View>
+  </View>
+);
+
+export const CloseIcon: React.FC<IconProps> = ({ color, size = 16 }) => (
+  <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size, height: 2, backgroundColor: color, transform: [{ rotate: '45deg' }], position: 'absolute' }} />
+    <View style={{ width: size, height: 2, backgroundColor: color, transform: [{ rotate: '-45deg' }], position: 'absolute' }} />
   </View>
 );
 

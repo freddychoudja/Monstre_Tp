@@ -18,12 +18,11 @@ import { Header } from './src/components/Header';
 import { ReaderScreen } from './src/screens/ReaderScreen';
 import { VoiceScreen } from './src/screens/VoiceScreen';
 import { RemixScreen } from './src/screens/RemixScreen';
-import { GalleryScreen } from './src/screens/GalleryScreen';
-import { DocumentIcon, MicIcon, EditIcon, HistoryIcon } from './src/components/Icons';
+import { DocumentIcon, MicIcon, EditIcon } from './src/components/Icons';
 
 function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
-  const [currentTab, setCurrentTab] = useState<'reader' | 'voice' | 'remix' | 'gallery'>('reader');
+  const [currentTab, setCurrentTab] = useState<'reader' | 'voice' | 'remix'>('reader');
 
   // Shared intent state
   const [sharedText, setSharedText] = useState<string>('');
@@ -73,13 +72,8 @@ function AppContent() {
     };
   }, []);
 
-  const handleSendToRemix = (text: string, imageUri?: string) => {
+  const handleSendToRemix = (text: string) => {
     setSharedText(text);
-    if (imageUri) {
-      setSharedImageUri(imageUri);
-    } else {
-      setSharedImageUri('');
-    }
     setCurrentTab('remix');
   };
 
@@ -101,12 +95,6 @@ function AppContent() {
           <RemixScreen
             initialText={sharedText}
             initialImageUri={sharedImageUri}
-          />
-        )}
-        {currentTab === 'gallery' && (
-          <GalleryScreen
-            onSendToRemix={handleSendToRemix}
-            activeTab={currentTab}
           />
         )}
       </View>
@@ -149,19 +137,6 @@ function AppContent() {
           </View>
           <Text style={[styles.navText, currentTab === 'remix' ? styles.navTextActive : styles.navTextInactive]}>
             Remix
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setCurrentTab('gallery')}
-          activeOpacity={0.7}
-        >
-          <View style={{ opacity: currentTab === 'gallery' ? 1 : 0.5, marginBottom: 4 }}>
-            <HistoryIcon color={currentTab === 'gallery' ? Theme.colors.primary : Theme.colors.secondary} size={22} />
-          </View>
-          <Text style={[styles.navText, currentTab === 'gallery' ? styles.navTextActive : styles.navTextInactive]}>
-            Galerie
           </Text>
         </TouchableOpacity>
       </View>
